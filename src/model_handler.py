@@ -37,11 +37,11 @@ class ModelHandler(object):
 
 		elif args.data_name == 'amazon':  # amazon
 			# 0-3304 are unlabeled nodes
-			index = list(range(3305, len(labels)))
+			index = list(range(3305, len(labels))) #使用list()将生成的整数序列转换为列表类型
 			idx_train, idx_rest, y_train, y_rest = train_test_split(index, labels[3305:], stratify=labels[3305:],
-																	train_size=args.train_ratio, random_state=2, shuffle=True)
+																	train_size=args.train_ratio, random_state=2, shuffle=True) # idx_train={list:3455} idx_rest={list:5184},y_train={ndarray:(3455,)} y_rest={ndarray:(5184,)}
 			idx_valid, idx_test, y_valid, y_test = train_test_split(idx_rest, y_rest, stratify=y_rest,
-																	test_size=args.test_ratio, random_state=2, shuffle=True)
+																	test_size=args.test_ratio, random_state=2, shuffle=True) # idx_valid={list:1710}, idx_test={list:3474}, y_valid={ndarray:(1710,)} y_test={ndarray:(3474,)}
 
 		print(f'Run on {args.data_name}, postive/total num: {np.sum(labels)}/{len(labels)}, train num {len(y_train)},'+
 			f'valid num {len(y_valid)}, test num {len(y_test)}, test positive num {np.sum(y_test)}')
@@ -50,7 +50,7 @@ class ModelHandler(object):
 
 
 		# split pos neg sets for under-sampling
-		train_pos, train_neg = pos_neg_split(idx_train, y_train)
+		train_pos, train_neg = pos_neg_split(idx_train, y_train) # train_pos={list:328} train_neg={list:3127}
 
 		
 		# if args.data == 'amazon':
@@ -166,7 +166,10 @@ class ModelHandler(object):
 						torch.save(gnn_model.state_dict(), path_saver)
 				else:
 					print("Valid at epoch {}".format(epoch))
-					f1_mac_val, f1_1_val, f1_0_val, auc_val, gmean_val = test_pcgnn(idx_valid, y_valid, gnn_model, args.batch_size, args.thres)
+					# f1_mac_val, f1_1_val, f1_0_val, auc_val, gmean_val = test_pcgnn(idx_valid, y_valid, gnn_model, args.batch_size, args.thres)
+					f1_mac_val, f1_1_val, f1_0_val, auc_val, ap_gnn, gmean_val, auc_label1, ap_label1 = test_pcgnn(
+						idx_valid, y_valid, gnn_model, args.batch_size, args.thres)
+					# f1_mac_val, f1_1_val, f1_0_val, auc_val, gmean_val = test_pcgnn(idx_valid, y_valid, gnn_model, args.batch_size, args.thres)
 					if auc_val > auc_best:
 						f1_mac_best, auc_best, ep_best = f1_mac_val, auc_val, epoch
 						if not os.path.exists(dir_saver):
@@ -177,8 +180,16 @@ class ModelHandler(object):
 		print("Restore model from epoch {}".format(ep_best))
 		print("Model path: {}".format(path_saver))
 		gnn_model.load_state_dict(torch.load(path_saver))
+		# if args.model == 'SAGE' or args.model == 'GCN':
+		# 	f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test = test_sage(idx_test, y_test, gnn_model, args.batch_size, args.thres)
+		# else:
+		# 	f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test = test_pcgnn(idx_test, y_test, gnn_model, args.batch_size, args.thres)
+		# return f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test
 		if args.model == 'SAGE' or args.model == 'GCN':
-			f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test = test_sage(idx_test, y_test, gnn_model, args.batch_size, args.thres)
+			f1_macro_gnn, f1_binary_1_gnn, f1_binary_0_gnn, auc_gnn, ap_gnn, gmean_gnn, auc_label1, ap_label1 = test_sage(
+				idx_test, y_test, gnn_model, args.batch_size, args.thres)
 		else:
-			f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test = test_pcgnn(idx_test, y_test, gnn_model, args.batch_size, args.thres)
-		return f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test
+			# f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test = test_pcgnn(idx_test, y_test, gnn_model, args.batch_size, args.thres)
+			f1_macro_gnn, f1_binary_1_gnn, f1_binary_0_gnn, auc_gnn, ap_gnn, gmean_gnn, auc_label1, ap_label1 = test_pcgnn(
+				idx_test, y_test, gnn_model, args.batch_size, args.thres)
+		return f1_macro_gnn, f1_binary_1_gnn, f1_binary_0_gnn, auc_gnn, ap_gnn, gmean_gnn, auc_label1, ap_label1

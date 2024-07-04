@@ -22,10 +22,13 @@ def main(config):
     print_config(config)
     set_random_seed(config['seed'])
     model = ModelHandler(config)
-    f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test = model.train()
+    # f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test = model.train()
+    # f1_mac_test, f1_1_test, f1_0_test, auc_test, gmean_test = model.train()
+    f1_mac_test, f1_1_test, f1_0_test, auc_test, ap_gnn, gmean_test, auc_label1, ap_label1= model.train()
     print("F1-Macro: {}".format(f1_mac_test))
     print("AUC: {}".format(auc_test))
     print("G-Mean: {}".format(gmean_test))
+    print("ap_gnn: {}".format(ap_gnn))
 
 
 def multi_run_main(config):
@@ -81,7 +84,8 @@ def get_config(config_path="config.yml"):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-config', '--config', required=True, type=str, help='path to the config file')
+    parser.add_argument('-config',default="./config/pcgnn_amazon.yml", required=False, type=str, help='path to the config file')
+    # parser.add_argument('-config', '--config', required=True, type=str, help='path to the config file')
     parser.add_argument('--multi_run', action='store_true', help='flag: multi run')
     args = vars(parser.parse_args())
     return args

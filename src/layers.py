@@ -50,8 +50,8 @@ class InterAgg(nn.Module):
 		self.thresholds = [0.5, 0.5, 0.5]
 
 		# parameter used to transform node embeddings before inter-relation aggregation
-		self.weight = nn.Parameter(torch.FloatTensor(self.embed_dim*len(intraggs)+self.feat_dim, self.embed_dim))
-		init.xavier_uniform_(self.weight)
+		self.weight = nn.Parameter(torch.FloatTensor(self.embed_dim*len(intraggs)+self.feat_dim, self.embed_dim)) # 第一维：嵌入维度*关系数+特征维度，第二维：嵌入维度
+		init.xavier_uniform_(self.weight) # 将self对象的weight参数（即模型的权重参数）用Xavier均匀分布进行初始化
 
 		# label predictor for similarity measure
 		self.label_clf = nn.Linear(self.feat_dim, 2)

@@ -38,11 +38,11 @@ def load_data(data, prefix='data/'):
 		file.close()
 	elif data == 'amazon':
 		data_file = loadmat(prefix + 'Amazon.mat')
-		labels = data_file['label'].flatten()
-		feat_data = data_file['features'].todense().A
+		labels = data_file['label'].flatten()# label:(1,11944)->(11944,)
+		feat_data = data_file['features'].todense().A # feature:(11944, 25) feat_data:(11944, 25)
 		# load the preprocessed adj_lists
 		with open(prefix + 'amz_homo_adjlists.pickle', 'rb') as file:
-			homo = pickle.load(file)
+			homo = pickle.load(file) #在 Python 中，序列化和反序列化通常使用 pickle 模块来完成。你可以将 Python 对象（例如列表、字典、类实例等）序列化为二进制格式并保存到 .pickle 文件中。然后，你可以在以后通过反序列化将数据从 .pickle 文件加载回 Python 对象
 		file.close()
 		with open(prefix + 'amz_upu_adjlists.pickle', 'rb') as file:
 			relation1 = pickle.load(file)
@@ -56,15 +56,15 @@ def load_data(data, prefix='data/'):
 	return [homo, relation1, relation2, relation3], feat_data, labels
 
 
-def normalize(mx):
+def normalize(mx): # mx={ndarray:(11944,25)}
 	"""
 		Row-normalize sparse matrix
 		Code from https://github.com/williamleif/graphsage-simple/
 	"""
-	rowsum = np.array(mx.sum(1)) + 0.01
-	r_inv = np.power(rowsum, -1).flatten()
-	r_inv[np.isinf(r_inv)] = 0.
-	r_mat_inv = sp.diags(r_inv)
+	rowsum = np.array(mx.sum(1)) + 0.01 # axis=1表示对每一行进行求和，rowsum={ndarray:(11944,)}
+	r_inv = np.power(rowsum, -1).flatten() # 是给rowsum的每个元素取倒数，然后把结果保存在r_inv中，r_inv={ndarray:(11944,)}
+	r_inv[np.isinf(r_inv)] = 0.# 将 r_inv 数组中的无穷值（np.isinf(r_inv) 是检查是否为无穷的布尔数组）替换为0。
+	r_mat_inv = sp.diags(r_inv)# 将经过替换的 r_inv 数组构造成一个稀疏对角矩阵 r_mat_inv。r_mat_inv={ndarray:(11944,11944)}
 	mx = r_mat_inv.dot(mx)
 	return mx
 
@@ -88,7 +88,7 @@ def sparse_to_adjlist(sp_matrix, filename):
 	file.close()
 
 
-def pos_neg_split(nodes, labels):
+def pos_neg_split(nodes, labels): # nodes={list:3455}
 	"""
 	Find positive and negative nodes given a list of nodes and their labels
 	:param nodes: a list of nodes
@@ -103,7 +103,7 @@ def pos_neg_split(nodes, labels):
 			pos_nodes.append(aux_nodes[idx])
 			neg_nodes.remove(aux_nodes[idx])
 
-	return pos_nodes, neg_nodes
+	return pos_nodes, neg_nodes # pos_nodes={list:328} neg_nodes={list:3127}
 
 
 def pick_step(idx_train, y_train, adj_list, size):
@@ -225,7 +225,11 @@ def test_pcgnn(test_cases, labels, model, batch_size, thres=0.5):
 	print(f"Label1 F1: {f1_label1 / test_batch_num:.4f}\tAccuracy: {acc_label1 / test_batch_num:.4f}"+
 	      f"\tRecall: {recall_label1 / test_batch_num:.4f}\tAUC: {auc_label1:.4f}\tAP: {ap_label1:.4f}")
 
-	return f1_macro_gnn, f1_binary_1_gnn, f1_binary_0_gnn, auc_gnn, gmean_gnn
+	# return f1_macro_gnn, f1_binary_1_gnn, f1_binary_0_gnn, auc_gnn, gmean_gnn
+	# return f1_macro_gnn, f1_binary_1_gnn, f1_binary_0_gnn, auc_gnn, gmean_gnn
+	return f1_macro_gnn, f1_binary_1_gnn, f1_binary_0_gnn, auc_gnn, ap_gnn, gmean_gnn, auc_label1, ap_label1
+
+
 
 def conf_gmean(conf):
 	tn, fp, fn, tp = conf.ravel()
